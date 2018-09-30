@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
 	"github.com/saseke/go-web/Config"
+	"github.com/saseke/go-web/Constant"
 	"github.com/saseke/go-web/Models"
-	"github.com/saseke/go-web/Routers"
 	"github.com/subosito/gotenv"
 	"log"
 	"os"
@@ -20,23 +22,36 @@ func init() {
 func main() {
 
 	//Config.DB, err = gorm.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/poseidon?charset=utf8&parseTime=True&loc=Local")
-	cfgStr := os.Getenv("DB_USERNAME") + ":" + os.Getenv("DB_PASSWORD") + "@tcp(" +
-		os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT") + ")/" +
-		os.Getenv("DB_TABLE") + "?" + os.Getenv("DB_PARAM")
+	cfgStr := os.Getenv(Constant.DB_USER) + ":" + os.Getenv(Constant.DB_PWD) + "@tcp(" +
+		os.Getenv(Constant.DB_HOST) + ":" + os.Getenv(Constant.DB_PORT) + ")/" +
+		os.Getenv(Constant.DB_TABLE) + "?" + os.Getenv(Constant.DB_PARAM)
 	fmt.Println(cfgStr)
-	Config.DB, err = gorm.Open(os.Getenv("DB_DATABSE_TYPE"), cfgStr)
+	Config.DB, err = gorm.Open(os.Getenv(Constant.DB_TYPE), cfgStr)
 
 	if err != nil {
 		fmt.Println(err)
 	}
+	initRedis()
 	defer Config.DB.Close()
+	// show logs
+	Config.DB.LogMode(true)
 	Config.DB.SingularTable(true)
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
 		return "db_" + defaultTableName
 	}
 	Config.DB.AutoMigrate(&Models.Item{})
 
-	r := Routers.SetUpRouter()
+	r := gin.Default()
 
 	r.Run()
+}
+
+func initRedis() {
+	client := redis.NewClient(&redis.Options{
+		Addr:     os.Getenv(Constant.REDIS_HOST) + ":" + os.Getenv(Constant.REDIS_PORT),
+		Password: "",
+		DB:       0,
+	})
+	pong, err := client.Ping().Result()
+	fmt.Println(pong, err)
 }
