@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/saseke/go-web/Config"
 	"github.com/saseke/go-web/Constant"
 	"github.com/saseke/go-web/Models"
+	"github.com/saseke/go-web/Routers"
 	"github.com/subosito/gotenv"
-	"log"
 	"os"
 )
 
@@ -17,7 +17,6 @@ var err error
 
 func init() {
 	gotenv.Load()
-	log.Println(os.Getenv("DB_HOST"))
 }
 func main() {
 
@@ -31,7 +30,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	initRedis()
+	//initRedis()
 	defer Config.DB.Close()
 	// show logs
 	Config.DB.LogMode(true)
@@ -41,7 +40,7 @@ func main() {
 	}
 	Config.DB.AutoMigrate(&Models.Item{})
 
-	r := gin.Default()
+	r :=Routers.SetUpRouter()
 
 	r.Run()
 }

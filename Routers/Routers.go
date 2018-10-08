@@ -15,5 +15,6 @@ func SetUpRouter() *gin.Engine {
 		v1.POST("", Controllers.AddNewItem)
 		v1.PUT("", Controllers.PutItem)
 	}
+	r.GET("/test", Controllers.TestA)
 	return r
 }
